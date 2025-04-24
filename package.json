@@ -1,0 +1,32 @@
+{
+  "name": "benkesmith-get-lastmedia",
+  "version": "1.0.0",
+  "description": "A Cordova plugin for fetching the last N photos/videos from the phone.",
+  "cordova": {
+    "id": "benkesmith-get-lastmedia",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ragcsalo/benkesmith-get-lastmedia.git"
+  },
+  "keywords": [
+    "cordova",
+    "media",
+    "photos",
+    "videos",
+    "retrieve",
+    "plugin"
+  ],
+  "author": "Benke Smith <benke.smith@gmail.com>",
+  "license": "Apache-2.0",
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=6.0.0"
+    }
+  ]
+}

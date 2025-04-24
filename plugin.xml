@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="benkesmith-get-lastmedia" xmlns="http://apache.org/cordova/ns/plugins/1.0" version="1.0.0">
+    <name>GetMedia</name>
+    <description>A Cordova plugin for fetching the last N photos/videos from the phone.</description>
+    <license>Apache 2.0</license>
+	<keywords>cordova,media,photo,video,retrieve</keywords>
+    
+	<js-module src="www/GetMedia.js" name="GetMedia">
+        <clobbers target="cordova.plugins.GetMedia" />
+    </js-module>
+
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="GetMedia">
+                <param name="android-package" value="com.benkesmith.getmediaplugin.GetMedia" />
+            </feature>
+        </config-file>
+        <source-file src="src/android/GetMedia.java" target-dir="src/com/benkesmith/getmediaplugin"/>
+    </platform>
+
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="GetMedia">
+                <param name="ios-package" value="GetMediaPlugin" />
+            </feature>
+        </config-file>
+		<source-file src="src/ios/GetMediaPlugin.h" />
+		<source-file src="src/ios/GetMediaPlugin.m" />
+    </platform>
+</plugin>
