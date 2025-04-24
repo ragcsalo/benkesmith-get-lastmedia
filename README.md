@@ -20,7 +20,7 @@ cordova plugin add https://github.com/ragcsalo/benkesmith-get-lastmedia
 ## Usage
 
 ```js
-cordova.plugins.GetMedia.getLast(n,
+cordova.plugins.GetMediaPlugin.getLast(n,
   function(mediaArray) {
     console.log('Media:', mediaArray);
   },

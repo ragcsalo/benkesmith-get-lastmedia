@@ -5,22 +5,22 @@
     <license>Apache 2.0</license>
 	<keywords>cordova,media,photo,video,retrieve</keywords>
     
-	<js-module src="www/GetMedia.js" name="GetMedia">
-        <clobbers target="cordova.plugins.GetMedia" />
+	<js-module src="www/GetMediaPlugin.js" name="GetMediaPlugin">
+        <clobbers target="cordova.plugins.GetMediaPlugin" />
     </js-module>
 
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="GetMedia">
-                <param name="android-package" value="com.benkesmith.getmediaplugin.GetMedia" />
+            <feature name="GetMediaPlugin">
+                <param name="android-package" value="com.benkesmith.getmediaplugin.GetMediaPlugin" />
             </feature>
         </config-file>
-        <source-file src="src/android/GetMedia.java" target-dir="src/com/benkesmith/getmediaplugin"/>
+        <source-file src="src/android/GetMediaPlugin.java" target-dir="src/com/benkesmith/getmediaplugin"/>
     </platform>
 
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
-            <feature name="GetMedia">
+            <feature name="GetMediaPlugin">
                 <param name="ios-package" value="GetMediaPlugin" />
             </feature>
         </config-file>
