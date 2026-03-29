@@ -5,30 +5,53 @@
 
 - (void)getLast:(CDVInvokedUrlCommand*)command {
     NSInteger limit = [command.arguments[0] integerValue];
+    
     PHFetchOptions *options = [[PHFetchOptions alloc] init];
+    // Sort by creationDate descending to get the newest photos first
     options.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"creationDate" ascending:NO]];
-    options.fetchLimit = limit;
-
-    // Photos only
+    
+    // Fetch only images
     PHFetchResult<PHAsset *> *results = [PHAsset fetchAssetsWithMediaType:PHAssetMediaTypeImage options:options];
+    
     NSMutableArray *items = [NSMutableArray array];
     dispatch_group_t group = dispatch_group_create();
 
-    for (PHAsset *asset in results) {
+    NSInteger count = MIN(results.count, limit);
+    
+    for (NSInteger i = 0; i < count; i++) {
+        PHAsset *asset = results[i];
         dispatch_group_enter(group);
+        
         NSString *localId = asset.localIdentifier;
+        
+        // Convert creationDate to milliseconds timestamp
+        long long timestamp = (long long)([asset.creationDate timeIntervalSince1970] * 1000);
+        
         PHContentEditingInputRequestOptions *inputOpts = [[PHContentEditingInputRequestOptions alloc] init];
         [asset requestContentEditingInputWithOptions:inputOpts completionHandler:^(PHContentEditingInput *input, NSDictionary *info) {
+            
             NSURL *url = input.fullSizeImageURL;
+            NSString *path = url ? url.path : @"";
+            NSString *filename = url ? url.lastPathComponent : @"";
             NSString *mime = input.uniformTypeIdentifier ?: @"";
+            
             NSData *data = url ? [NSData dataWithContentsOfURL:url] : nil;
             NSString *b64 = data ? [data base64EncodedStringWithOptions:0] : @"";
+            
             NSDictionary *dict = @{
                 @"id": localId,
                 @"mimeType": mime,
+                @"path": path,
+                @"filename": filename,
+                @"timestamp": @(timestamp), // Numerical timestamp in ms
                 @"base64": b64
             };
-            [items addObject:dict];
+            
+            // Using a thread-safe way to add to the array since this is an async block
+            @synchronized (items) {
+                [items addObject:dict];
+            }
+            
             dispatch_group_leave(group);
         }];
     }
