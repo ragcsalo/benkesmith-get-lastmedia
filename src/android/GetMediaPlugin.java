@@ -12,6 +12,7 @@ import android.util.Base64;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.File;
 
 public class GetMediaPlugin extends CordovaPlugin {
     @Override
@@ -28,34 +29,50 @@ public class GetMediaPlugin extends CordovaPlugin {
             });
             return true;
         }
-
         return false;
     }
 
     private JSONArray fetchLast(int limit) throws JSONException, IOException {
         JSONArray array = new JSONArray();
         Context ctx = cordova.getActivity().getApplicationContext();
-        Uri uri = MediaStore.Files.getContentUri("external");
+
+        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
         String[] proj = {
-                MediaStore.Files.FileColumns._ID,
-                MediaStore.Files.FileColumns.MIME_TYPE
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.MIME_TYPE,
+                MediaStore.Images.Media.DATA,
+                MediaStore.Images.Media.DISPLAY_NAME,
+                MediaStore.Images.Media.DATE_ADDED
         };
-        String sel = MediaStore.Files.FileColumns.MEDIA_TYPE + "="
-                + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
-        String sort = MediaStore.Files.FileColumns.DATE_TAKEN + " DESC";
-        Cursor cursor = ctx.getContentResolver().query(uri, proj, sel, null, sort);
+
+        // Use DATE_ADDED for consistent sorting
+        String sort = MediaStore.Images.Media.DATE_ADDED + " DESC";
+
+        Cursor cursor = ctx.getContentResolver().query(uri, proj, null, null, sort);
 
         if (cursor != null) {
             int fetched = 0;
+            int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID);
+            int mimeColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE);
+            int pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            int nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
+            int dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED);
+
             while (cursor.moveToNext() && fetched < limit) {
-                long id   = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID));
-                String mime = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE));
+                long id = cursor.getLong(idColumn);
+                String mime = cursor.getString(mimeColumn);
+                String path = cursor.getString(pathColumn);
+                String filename = cursor.getString(nameColumn);
 
-                Uri contentUri = mime.startsWith("image")
-                        ? Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(id))
-                        : Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, String.valueOf(id));
+                // Convert DATE_ADDED (seconds) to milliseconds
+                long timestamp = cursor.getLong(dateAddedColumn) * 1000;
 
-                // read via ContentResolver
+                File file = new File(path);
+                if (!file.exists()) continue;
+
+                Uri contentUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(id));
+
                 try (InputStream in = ctx.getContentResolver().openInputStream(contentUri)) {
                     if (in != null) {
                         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -64,13 +81,20 @@ public class GetMediaPlugin extends CordovaPlugin {
                         while ((len = in.read(buffer)) != -1) {
                             bos.write(buffer, 0, len);
                         }
+
                         String b64 = Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP);
+
                         JSONObject obj = new JSONObject();
                         obj.put("id", id);
                         obj.put("mimeType", mime);
+                        obj.put("path", path);
+                        obj.put("filename", filename);
+                        obj.put("timestamp", timestamp);
                         obj.put("base64", b64);
                         array.put(obj);
                     }
+                } catch (Exception e) {
+                    continue;
                 }
                 fetched++;
             }
